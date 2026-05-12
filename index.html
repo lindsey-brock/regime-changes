@@ -513,16 +513,29 @@
     const counterCurrent = document.getElementById('counterCurrent');
     const counterTotal = document.getElementById('counterTotal');
 
-    function showPopover(item){
-      popDate.textContent = item.date;
-      popTitle.innerHTML = `<a href="${item.url}" target="_blank" rel="noopener">${item.title}</a>`;
-      popDesc.textContent = item.desc;
-      popSource.textContent = item.source || '';
-      popover.style.display = 'block';
-    }
-    function hidePopover(){ popover.style.display = 'none'; }
-    closePop.addEventListener('click', hidePopover);
-
+   let currentItem = null;
+function showPopover(item){
+  currentItem = item;
+  popDate.textContent = item.date;
+  popTitle.innerHTML = `<a href="${item.url}" target="_blank" rel="noopener">${item.title}</a>`;
+  popDesc.textContent = item.desc;
+  popSource.textContent = item.source || '';
+  popover.style.display = 'block';
+  document.getElementById('popoverTab').style.display = 'none';
+}
+function hidePopover(){
+  popover.style.display = 'none';
+  if(currentItem){
+    const tab = document.getElementById('popoverTab');
+    tab.textContent = currentItem.date + ' — ' + currentItem.title;
+    tab.style.display = 'block';
+  }
+}
+closePop.addEventListener('click', hidePopover);
+document.getElementById('popoverTab').addEventListener('click', () => {
+  popover.style.display = 'block';
+  document.getElementById('popoverTab').style.display = 'none';
+});
     const eventItems = items.filter(i => i.type === 'event');
     let currentIndex = 0;
     counterTotal.textContent = String(eventItems.length).padStart(2,'0');
