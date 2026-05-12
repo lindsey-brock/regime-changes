@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>U.S Involvement in Foreign Regime Changes 1893–2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://use.typekit.net/azq6zbr.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <style>
+    :root{
+      --bg:#0c0c0c;
+      --bg2:#111111;
+      --bg3:#161616;
+      --text:#f5f0e8;
+      --muted:#8a8478;
+      --accent:#e8c547;
+      --red:#c94040;
+      --border:rgba(245,240,232,0.1);
+      --border-strong:rgba(245,240,232,0.2);
+      --display:'Bebas Neue',sans-serif;
+      --serif:'Libre Baskerville',serif;
+      --sans:'DM Sans',sans-serif;
+      --panel:rgba(12,12,12,0.92);
+      --shadow:0 16px 40px rgba(0,0,0,0.6);
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;}
+
+    html,body{
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      overflow:hidden;
+    }
+
+    ::-webkit-scrollbar{width:3px;}
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--accent);}
+
+    .wrap{position:relative;height:100%;width:100%;overflow:hidden;}
+
+    /* TOP RULE */
+    .hero-rule{
+      position:fixed;top:0;left:0;right:0;
+      height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--red),var(--accent));
+      z-index:100;
+    }
+
+    /* PAGE TITLE */
+    .page-title{
+      position:fixed;
+      top:16px;left:0;right:0;
+      z-index:50;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+      padding:0 24px;
+    }
+    .page-title-inner{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      backdrop-filter:blur(12px);
+      padding:10px 24px;
+      max-width:960px;
+      width:100%;
+    }
+    .page-title-label{
+      font-size:9px;
+      font-weight:500;
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      color:var(--accent);
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .page-title h1{
+      font-family:var(--display);
+      font-size:clamp(14px,2vw,20px);
+      letter-spacing:0.08em;
+      color:var(--text);
+      line-height:1;
+    }
+
+    /* MAP */
+    #map{
+      position:fixed;
+      inset:0;
+      z-index:0;
+    }
+
+    /* Leaflet tile override for dark feel */
+    .leaflet-tile{filter:brightness(0.55) saturate(0.3) hue-rotate(200deg);}
+
+    .vignette{
+      position:fixed;inset:0;
+      z-index:1;
+      pointer-events:none;
+      background:radial-gradient(80% 65% at 50% 35%, rgba(12,12,12,0) 0%, rgba(12,12,12,0.5) 70%, rgba(12,12,12,0.85) 100%);
+    }
+
+    /* TIMELINE SHELL */
+    .timeline-shell{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:10;
+      padding:0 0 0;
+    }
+
+    .timeline{
+      background:var(--panel);
+      border-top:1px solid var(--border);
+      backdrop-filter:blur(16px);
+    }
+
+    /* TOP BAR */
+    .timeline-topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 24px;
+      border-bottom:1px solid var(--border);
+    }
+    .timeline-title{
+      font-family:var(--display);
+      font-size:13px;
+      letter-spacing:0.12em;
+      color:var(--accent);
+    }
+    .timeline-hint{
+      font-size:10px;
+      font-weight:500;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    /* CONTROLS */
+    .controls{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 24px;
+      border-bottom:1px solid var(--border);
+    }
+
+    .nav-btn{
+      font-family:var(--sans);
+      font-size:10px;
+      font-weight:500;
+      letter-spacing:0.15em;
+      text-transform:uppercase;
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--muted);
+      padding:8px 16px;
+      cursor:pointer;
+      transition:color 0.2s, border-color 0.2s, background 0.2s;
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+    .nav-btn:hover{
+      color:var(--accent);
+      border-color:var(--accent);
+      background:rgba(232,197,71,0.06);
+    }
+    .nav-btn:disabled{
+      opacity:0.3;
+      cursor:default;
+    }
+    .nav-btn:disabled:hover{
+      color:var(--muted);
+      border-color:var(--border);
+      background:transparent;
+    }
+
+    /* DOTS */
+    .dots{
+      display:flex;
+      align-items:center;
+      gap:5px;
+      flex:1;
+      overflow-x:auto;
+      padding:4px 0;
+      scrollbar-width:none;
+      scroll-snap-type:x mandatory;
+    }
+    .dots::-webkit-scrollbar{display:none;}
+
+    .dot{
+      width:6px;height:6px;
+      border-radius:50%;
+      background:var(--border-strong);
+      border:none;
+      cursor:pointer;
+      flex:0 0 auto;
+      transition:transform 0.2s, background 0.2s;
+      scroll-snap-align:center;
+    }
+    .dot:hover{transform:scale(1.4);background:var(--muted);}
+    .dot.active{
+      background:var(--accent);
+      transform:scale(1.4);
+    }
+
+    /* CENTURY BAR */
+    .century-bar{
+      display:flex;
+      width:100%;
+      border-top:1px solid var(--border);
+    }
+
+    .century-seg{
+      flex:1;
+      text-align:center;
+      padding:10px 8px;
+      border-right:1px solid var(--border);
+      cursor:pointer;
+      transition:background 0.2s;
+      display:grid;
+      align-content:center;
+      min-width:0;
+    }
+    .century-seg:last-child{border-right:none;}
+    .century-seg:hover{background:rgba(232,197,71,0.05);}
+    .century-seg.active{
+      background:rgba(232,197,71,0.08);
+      border-top:2px solid var(--accent);
+      margin-top:-1px;
+    }
+
+    .century-seg .label{
+      font-family:var(--display);
+      font-size:14px;
+      letter-spacing:0.08em;
+      color:var(--text);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .century-seg.active .label{color:var(--accent);}
+    .century-seg .sub{
+      font-size:10px;
+      font-weight:500;
+      letter-spacing:0.1em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-top:3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* POPOVER */
+    .popover{
+      position:fixed;
+      left:24px;right:24px;
+      bottom:172px;
+      z-index:20;
+      display:none;
+      max-width:860px;
+      margin:0 auto;
+    }
+    .popover-inner{
+      background:var(--bg3);
+      border:1px solid var(--border-strong);
+      border-left:3px solid var(--accent);
+      box-shadow:var(--shadow);
+      padding:20px 24px 18px;
+      backdrop-filter:blur(16px);
+      position:relative;
+    }
+    .popover-rule{
+      position:absolute;top:0;left:0;right:0;
+      height:2px;
+      background:linear-gradient(90deg,var(--accent),var(--red),transparent);
+      opacity:0.6;
+    }
+    .popover-top{
+      display:flex;
+      gap:12px;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    .popover-date{
+      font-size:9px;
+      font-weight:500;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      color:var(--accent);
+      margin-bottom:6px;
+    }
+    .popover h3{
+      font-family:var(--display);
+      font-size:clamp(16px,2vw,22px);
+      letter-spacing:0.05em;
+      line-height:1.1;
+      color:var(--text);
+    }
+    .popover h3 a{
+      color:var(--text);
+      text-decoration:none;
+      border-bottom:1px solid var(--border);
+      transition:border-color 0.2s, color 0.2s;
+    }
+    .popover h3 a:hover{
+      color:var(--accent);
+      border-color:var(--accent);
+    }
+
+    .close-btn{
+      font-family:var(--sans);
+      font-size:10px;
+      font-weight:500;
+      letter-spacing:0.15em;
+      text-transform:uppercase;
+      border:1px solid var(--border);
+      background:transparent;
+      color:var(--muted);
+      padding:6px 12px;
+      cursor:pointer;
+      transition:color 0.2s,border-color 0.2s;
+      flex-shrink:0;
+    }
+    .close-btn:hover{color:var(--accent);border-color:var(--accent);}
+
+    .desc{
+      font-family:var(--serif);
+      font-size:13px;
+      font-style:italic;
+      line-height:1.8;
+      color:var(--muted);
+      margin-bottom:12px;
+    }
+    .source{
+      font-size:10px;
+      font-weight:500;
+      letter-spacing:0.1em;
+      text-transform:uppercase;
+      color:rgba(245,240,232,0.3);
+    }
+
+    /* PULSE MARKER */
+    .pulse-marker{
+      width:14px;height:14px;
+      border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 0 0 rgba(232,197,71,0.5);
+      animation:pulse 1.8s infinite;
+      border:2px solid var(--bg);
+    }
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(232,197,71,0.5);}
+      70%{box-shadow:0 0 0 14px rgba(232,197,71,0);}
+      100%{box-shadow:0 0 0 0 rgba(232,197,71,0);}
+    }
+
+    /* COUNTER */
+    .event-counter{
+      font-family:var(--display);
+      font-size:13px;
+      letter-spacing:0.15em;
+      color:var(--muted);
+      flex-shrink:0;
+    }
+    .event-counter span{color:var(--accent);}
+
+    @media(max-width:640px){
+      .page-title-inner{padding:8px 16px;}
+      .timeline-topbar{padding:8px 16px;}
+      .timeline-hint{display:none;}
+      .controls{padding:8px 16px;}
+      .nav-btn{padding:7px 10px;font-size:9px;}
+      .century-seg .label{font-size:12px;}
+      .century-seg .sub{font-size:9px;}
+      .popover{left:12px;right:12px;bottom:200px;}
+      .popover-inner{padding:14px 16px 12px;}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="hero-rule"></div>
+    <div class="page-title">
+      <div class="page-title-inner">
+        <span class="page-title-label">Data Viz</span>
+        <h1>U.S. Involvement in Foreign Regime Changes — 1893–2026</h1>
+      </div>
+    </div>
+
+    <div id="map" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div class="popover" id="popover" role="dialog" aria-label="Event details">
+      <div class="popover-inner">
+        <div class="popover-rule"></div>
+        <div class="popover-top">
+          <div>
+            <div class="popover-date" id="popDate"></div>
+            <h3 id="popTitle"></h3>
+          </div>
+          <button class="close-btn" id="closePop" type="button">Close ✕</button>
+        </div>
+        <div class="desc" id="popDesc"></div>
+        <div class="source" id="popSource"></div>
+      </div>
+    </div>
+
+    <div class="timeline-shell">
+      <div class="timeline">
+        <div class="timeline-topbar">
+          <div class="timeline-title">Interactive Timeline + Map</div>
+          <p class="timeline-hint">Buttons · Scroll dots · Century tabs · Arrow keys · Esc</p>
+        </div>
+
+        <div class="controls">
+          <button class="nav-btn" id="prevBtn" type="button">← Prev</button>
+          <div class="dots" id="dots"></div>
+          <div class="event-counter"><span id="counterCurrent">01</span> / <span id="counterTotal">00</span></div>
+          <button class="nav-btn" id="nextBtn" type="button">Next →</button>
+        </div>
+
+        <div class="century-bar" id="centuryBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const map = L.map('map', { zoomControl:false, worldCopyJump:true }).setView([15,-20],2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom:7,
+      attribution:'&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const pulseIcon = L.divIcon({
+      className:'',
+      html:'<div class="pulse-marker"></div>',
+      iconSize:[14,14],
+      iconAnchor:[7,7]
+    });
+    let activeMarker = null;
+
+    function flyToEvent(e, { offsetY=0 }={}){
+      map.flyTo([e.lat, e.lng], e.zoom||4, { duration:1.2 });
+      if(activeMarker) map.removeLayer(activeMarker);
+      activeMarker = L.marker([e.lat, e.lng], { icon:pulseIcon }).addTo(map);
+      if(offsetY){
+        map.once('moveend', ()=>{ map.panBy([0,offsetY], { animate:true, duration:0.3 }); });
+      }
+    }
+
+    const items = [
+      { type:"century", label:"19th Century", sub:"" },
+      { type:"event", date:"1893", title:"Overthrow of the Hawaiian Kingdom", url:"https://en.wikipedia.org/wiki/Overthrow_of_the_Hawaiian_Kingdom", desc:"The Hawaiian Kingdom was overthrown in a coup d'état against Queen Liliʻuokalani on January 17, 1893. Led by the Committee of Safety with the support of U.S. Marines, the insurgents established the Republic of Hawaii with the ultimate goal of annexation to the United States, achieved in 1898.", source:"Source: Wikipedia", lat:21.3069, lng:-157.8583, zoom:6 },
+      { type:"event", date:"1898–1902", title:"Occupation of Cuba", url:"https://en.wikipedia.org/wiki/Military_Government_of_Cuba", desc:"Following the Spanish–American War, the U.S. established a provisional military government in Cuba. The position of military governor was abolished in July 1902.", source:"Source: Wikipedia", lat:23.1136, lng:-82.3666, zoom:5 },
+      { type:"event", date:"1898–1902", title:"Occupation of the Philippines", url:"https://en.wikipedia.org/wiki/Military_Government_of_the_Philippine_Islands", desc:"The Military Government of the Philippine Islands was established by the United States on August 14, 1898, a day after the capture of Manila, with General Wesley Merritt acting as military governor.", source:"Source: Wikipedia", lat:14.5995, lng:120.9842, zoom:5 },
+      { type:"event", date:"1898–1900", title:"Occupation of Puerto Rico", url:"https://en.wikipedia.org/wiki/Military_Government_of_Porto_Rico", desc:"A provisional military government was established in Puerto Rico during the Spanish–American War in 1898. The U.S. immediately began the 'Americanization' process, bringing total change to Puerto Rico's economy and polity.", source:"Source: Wikipedia", lat:18.4655, lng:-66.1057, zoom:6 },
+      { type:"event", date:"1898–1950", title:"Naval Government of Guam", url:"https://en.wikipedia.org/wiki/Naval_Government_of_Guam", desc:"A provisional military government established during the Spanish–American War in 1898, under U.S. Navy administration until the territory of Guam was organized in 1950.", source:"Source: Wikipedia", lat:13.4443, lng:144.7937, zoom:6 },
+
+      { type:"century", label:"20th Century", sub:"1901–1959" },
+      { type:"event", date:"1906–1909", title:"Second Occupation of Cuba", url:"https://en.wikipedia.org/wiki/Provisional_Government_of_Cuba", desc:"When Cuban President Tomás Estrada Palma's government collapsed, U.S. President Theodore Roosevelt ordered military forces into Cuba to prevent fighting, protect U.S. economic interests, and hold free elections.", source:"Source: Wikipedia", lat:23.1136, lng:-82.3666, zoom:5 },
+      { type:"event", date:"1912–1933", title:"Occupation of Nicaragua", url:"https://en.wikipedia.org/wiki/United_States_occupation_of_Nicaragua", desc:"Part of the Banana Wars, U.S. military invasions of Nicaragua were designed to prevent any nation other than the U.S. from building a Nicaraguan Canal. Nicaragua assumed quasi-protectorate status under the 1916 Bryan–Chamorro Treaty.", source:"Source: Wikipedia", lat:12.11499, lng:-86.23617, zoom:6 },
+      { type:"event", date:"1913", title:"Ten Tragic Days — Mexico", url:"https://en.wikipedia.org/wiki/Ten_Tragic_Days", desc:"A coup d'état against Mexico's democratically elected president Francisco I. Madero, carried out with support from U.S. ambassador Henry Lane Wilson. The coup instigated a second phase of the Mexican Revolution.", source:"Source: Wikipedia", lat:19.4326, lng:-99.1332, zoom:6 },
+      { type:"event", date:"1914", title:"Occupation of Veracruz", url:"https://en.wikipedia.org/wiki/Military_Government_of_Veracruz", desc:"A provisional military government established during the American occupation of Veracruz from April 21 to November 23, 1914. The occupation brought the U.S. and Mexico to the brink of war.", source:"Source: Wikipedia", lat:19.1738, lng:-96.1342, zoom:6 },
+      { type:"event", date:"1915–1934", title:"Occupation of Haiti", url:"https://en.wikipedia.org/wiki/United_States_occupation_of_Haiti", desc:"330 U.S. Marines landed at Port-au-Prince after the National City Bank of New York convinced President Woodrow Wilson to take control of Haiti's political and financial interests.", source:"Source: Wikipedia", lat:18.5944, lng:-72.3074, zoom:6 },
+      { type:"event", date:"1916–1924", title:"Occupation of the Dominican Republic", url:"https://en.wikipedia.org/wiki/Military_Government_of_Santo_Domingo", desc:"A U.S. provisional military government lasting from May 1916 to September 1924, aimed at forcing the Dominicans to repay large debts to European creditors.", source:"Source: Wikipedia", lat:18.4861, lng:-69.9312, zoom:6 },
+      { type:"event", date:"1945–1948", title:"Occupation of Korea", url:"https://en.wikipedia.org/wiki/United_States_Army_Military_Government_in_Korea", desc:"The U.S. Army Military Government ruled the southern half of the Korean Peninsula from September 1945 to August 1948, largely unprepared for the challenge and with no knowledge of the language or political situation.", source:"Source: Wikipedia", lat:37.5665, lng:126.9780, zoom:6 },
+      { type:"event", date:"1953", title:"Iranian Coup d'État", url:"https://en.wikipedia.org/wiki/1953_Iranian_coup_d%27%C3%A9tat", desc:"Prime Minister Mohammad Mosaddegh was overthrown in a coup orchestrated by the CIA and MI6. A key motive was protecting British oil interests after Mossadegh nationalized Iran's oil industry.", source:"Source: Wikipedia", lat:35.6892, lng:51.3890, zoom:6 },
+      { type:"event", date:"1954", title:"Guatemalan Coup d'État", url:"https://en.wikipedia.org/wiki/1954_Guatemalan_coup_d%27%C3%A9tat", desc:"The CIA covert operation PBSuccess overthrew democratically elected President Árbenz, who had instituted land reforms. The coup installed the military dictatorship of Carlos Castillo Armas, the first in a series of U.S.-backed authoritarian rulers.", source:"Source: Wikipedia", lat:14.6349, lng:-90.5069, zoom:6 },
+      { type:"event", date:"1958", title:"Failed Coup in Indonesia", url:"https://en.wikipedia.org/wiki/CIA_activities_in_Indonesia", desc:"Following President Eisenhower's order to overthrow Sukarno, the CIA planned and supported a coup that ultimately failed when American pilot Pope was shot down and found carrying his U.S. Air Force ID.", source:"Source: Wikipedia", lat:-6.2088, lng:106.8456, zoom:5 },
+
+      { type:"century", label:"20th Century", sub:"1960–2000" },
+      { type:"event", date:"1960–1965", title:"Congo Crisis", url:"https://en.wikipedia.org/wiki/Congo_Crisis", desc:"A Cold War proxy conflict in which the U.S. and Soviet Union supported opposing factions. Around 100,000 people are believed to have been killed. The crisis ended with Joseph-Désiré Mobutu ruling the entire country.", source:"Source: Wikipedia", lat:-4.4419, lng:15.2663, zoom:5 },
+      { type:"event", date:"1961", title:"Bay of Pigs Invasion", url:"https://en.wikipedia.org/wiki/Bay_of_Pigs_Invasion", desc:"A failed U.S.-backed military landing in Cuba by Cuban exiles opposing Castro's revolution. Its failure influenced Cold War relations between Cuba, the United States, and the Soviet Union.", source:"Source: Wikipedia", lat:22.2396, lng:-81.2311, zoom:6 },
+      { type:"event", date:"1963", title:"South Vietnamese Coup d'État", url:"https://en.wikipedia.org/wiki/1963_South_Vietnamese_coup_d%27%C3%A9tat", desc:"CIA-backed Army officers deposed President Ngô Đình Diệm over disagreements with his handling of the Buddhist crisis and the communist threat.", source:"Source: Wikipedia", lat:10.8231, lng:106.6297, zoom:6 },
+      { type:"event", date:"1964", title:"Brazilian Coup d'État", url:"https://en.wikipedia.org/wiki/1964_Brazilian_coup_d%27%C3%A9tat", desc:"The U.S. government allied with opposition forces and supported the military overthrow of President João Goulart, initiating a military dictatorship that lasted until 1985.", source:"Source: Wikipedia", lat:-15.7939, lng:-47.8828, zoom:5 },
+      { type:"event", date:"1973", title:"Chilean Coup d'État", url:"https://en.wikipedia.org/wiki/1973_Chilean_coup_d%27%C3%A9tat", desc:"Nixon and Kissinger used the CIA to actively destabilize the democratically elected socialist government of Salvador Allende, leading to a military coup and Pinochet's dictatorship.", source:"Source: Wikipedia", lat:-33.4489, lng:-70.6693, zoom:6 },
+      { type:"event", date:"1979–1992", title:"Support for Afghan Mujahideen", url:"https://en.wikipedia.org/wiki/Operation_Cyclone", desc:"Operation Cyclone: the CIA program to arm and finance Afghan mujahideen, leaning heavily toward militant Islamic groups. One of the most expensive covert operations in CIA history.", source:"Source: Wikipedia", lat:34.5553, lng:69.2075, zoom:6 },
+      { type:"event", date:"1981–1990", title:"Support for Contras — Nicaragua", url:"https://en.wikipedia.org/wiki/Contras", desc:"The U.S. provided military assistance and financial aid to the Contras fighting the Sandinista government — one of the highest profile Cold War conflicts, leading to the Iran-Contra scandal.", source:"Source: Wikipedia", lat:12.11499, lng:-86.23617, zoom:6 },
+      { type:"event", date:"1983", title:"Invasion of Grenada", url:"https://en.wikipedia.org/wiki/United_States_invasion_of_Grenada", desc:"Operation Urgent Fury: the U.S. and a Caribbean coalition invaded Grenada following a military coup. Military occupation was established within days, followed by elections in December 1984.", source:"Source: Wikipedia", lat:12.1165, lng:-61.6790, zoom:7 },
+      { type:"event", date:"1989", title:"Invasion of Panama", url:"https://en.wikipedia.org/wiki/United_States_invasion_of_Panama", desc:"Operation Just Cause: the U.S. invaded Panama to depose General Manuel Noriega, wanted for racketeering and drug trafficking. Noriega surrendered in late January 1990.", source:"Source: Wikipedia", lat:8.9824, lng:-79.5199, zoom:6 },
+      { type:"event", date:"1994–1995", title:"Occupation of Haiti", url:"https://en.wikipedia.org/wiki/Operation_Uphold_Democracy", desc:"Operation Uphold Democracy: a multinational intervention to remove the military regime of Raoul Cédras and restore elected President Jean-Bertrand Aristide, authorized by UN Security Council Resolution 940.", source:"Source: Wikipedia", lat:18.5944, lng:-72.3074, zoom:6 },
+
+      { type:"century", label:"21st Century", sub:"" },
+      { type:"event", date:"2001", title:"Invasion of Afghanistan", url:"https://en.wikipedia.org/wiki/United_States_invasion_of_Afghanistan", desc:"Following the September 11 attacks, the U.S. led a multinational military operation to dismantle al-Qaeda and topple the Taliban government that had provided them sanctuary.", source:"Source: Wikipedia", lat:34.5553, lng:69.2075, zoom:6 },
+      { type:"event", date:"2003", title:"Invasion of Iraq", url:"https://en.wikipedia.org/wiki/2003_invasion_of_Iraq", desc:"A U.S.-led coalition invaded Iraq to disarm purported WMDs and end Saddam Hussein's government. A UN inspection team found no evidence of WMDs just before the invasion began.", source:"Source: Wikipedia", lat:33.3152, lng:44.3661, zoom:6 },
+      { type:"event", date:"2011", title:"Involvement in Libyan Civil War", url:"https://en.wikipedia.org/wiki/American_involvement_in_the_2011_Libyan_Civil_War", desc:"U.S. military action under a UN mandate, enforcing a no-fly zone and bombing military targets under Operation Odyssey Dawn before transferring to NATO command. Led to Gaddafi's downfall and Libya's destabilization.", source:"Source: Wikipedia", lat:32.8872, lng:13.1913, zoom:6 },
+      { type:"event", date:"2026", title:"U.S. Strikes in Venezuela", url:"https://en.wikipedia.org/wiki/2026_United_States_strikes_in_Venezuela", desc:"On January 2, 2026, the U.S. military launched Operation Absolute Resolve, capturing Venezuelan president Nicolás Maduro and his wife. More than 150 U.S. aircraft bombed infrastructure across northern Venezuela.", source:"Source: Wikipedia", lat:10.4806, lng:-66.9036, zoom:6 },
+    ];
+
+    const dotsWrap = document.getElementById('dots');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const centuryBar = document.getElementById('centuryBar');
+    const popover = document.getElementById('popover');
+    const popTitle = document.getElementById('popTitle');
+    const popDate = document.getElementById('popDate');
+    const popDesc = document.getElementById('popDesc');
+    const popSource = document.getElementById('popSource');
+    const closePop = document.getElementById('closePop');
+    const counterCurrent = document.getElementById('counterCurrent');
+    const counterTotal = document.getElementById('counterTotal');
+
+    function showPopover(item){
+      popDate.textContent = item.date;
+      popTitle.innerHTML = `<a href="${item.url}" target="_blank" rel="noopener">${item.title}</a>`;
+      popDesc.textContent = item.desc;
+      popSource.textContent = item.source || '';
+      popover.style.display = 'block';
+    }
+    function hidePopover(){ popover.style.display = 'none'; }
+    closePop.addEventListener('click', hidePopover);
+
+    const eventItems = items.filter(i => i.type === 'event');
+    let currentIndex = 0;
+    counterTotal.textContent = String(eventItems.length).padStart(2,'0');
+
+    // Century blocks
+    const centuryBlocks = [];
+    let currentCentury = null;
+    let eventIdx = 0;
+    items.forEach(it => {
+      if(it.type === 'century'){
+        currentCentury = { label:it.label, sub:it.sub||'', startEventIdx:eventIdx, endEventIdx:eventIdx };
+        centuryBlocks.push(currentCentury);
+      } else {
+        if(currentCentury) currentCentury.endEventIdx = eventIdx;
+        eventIdx++;
+      }
+    });
+
+    // Render century bar
+    centuryBlocks.forEach((c, ci) => {
+      const seg = document.createElement('div');
+      seg.className = 'century-seg';
+      seg.setAttribute('role','button');
+      seg.setAttribute('tabindex','0');
+      seg.innerHTML = `<div class="label">${c.label}</div>${c.sub ? `<div class="sub">${c.sub}</div>` : ''}`;
+      const jump = () => goTo(c.startEventIdx, true, { centerDot:true });
+      seg.addEventListener('click', jump);
+      seg.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); jump(); }});
+      centuryBar.appendChild(seg);
+    });
+    const centurySegs = Array.from(centuryBar.querySelectorAll('.century-seg'));
+
+    // Render dots
+    eventItems.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.setAttribute('role','button');
+      d.setAttribute('tabindex','0');
+      d.dataset.eventIndex = String(i);
+      const jump = () => goTo(i, true, { centerDot:true });
+      d.addEventListener('click', jump);
+      d.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); jump(); }});
+      dotsWrap.appendChild(d);
+    });
+    const dots = Array.from(dotsWrap.querySelectorAll('.dot'));
+
+    function setActiveDot(idx, { centerDot=true }={}){
+      dots.forEach((d,i) => d.classList.toggle('active', i===idx));
+      if(centerDot && dots[idx]) dots[idx].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+    }
+
+    function setButtons(){
+      prevBtn.disabled = currentIndex <= 0;
+      nextBtn.disabled = currentIndex >= eventItems.length - 1;
+    }
+
+    function setActiveCentury(ei){
+      let ai = 0;
+      for(let i=0;i<centuryBlocks.length;i++){
+        if(ei >= centuryBlocks[i].startEventIdx && ei <= centuryBlocks[i].endEventIdx){ ai=i; break; }
+      }
+      centurySegs.forEach((s,i) => s.classList.toggle('active', i===ai));
+    }
+
+    function goTo(idx, openPopover, { centerDot=true }={}){
+      currentIndex = Math.max(0, Math.min(eventItems.length-1, idx));
+      const item = eventItems[currentIndex];
+      if(!item) return;
+      setActiveDot(currentIndex, { centerDot });
+      setButtons();
+      setActiveCentury(currentIndex);
+      counterCurrent.textContent = String(currentIndex+1).padStart(2,'0');
+      const isMobile = window.matchMedia('(max-width:640px)').matches;
+      const offsetY = openPopover ? (isMobile ? 210 : 180) : 0;
+      flyToEvent(item, { offsetY });
+      if(openPopover) showPopover(item);
+    }
+
+    prevBtn.addEventListener('click', () => goTo(currentIndex-1, true, { centerDot:true }));
+    nextBtn.addEventListener('click', () => goTo(currentIndex+1, true, { centerDot:true }));
+
+    window.addEventListener('keydown', e => {
+      if(e.key==='ArrowLeft') goTo(currentIndex-1, true, { centerDot:true });
+      if(e.key==='ArrowRight') goTo(currentIndex+1, true, { centerDot:true });
+      if(e.key==='Escape') hidePopover();
+    });
+
+    let dotScrollTimer = null;
+    dotsWrap.addEventListener('scroll', () => {
+      clearTimeout(dotScrollTimer);
+      dotScrollTimer = setTimeout(() => {
+        const wrapRect = dotsWrap.getBoundingClientRect();
+        const wrapCenter = wrapRect.left + wrapRect.width/2;
+        let bestIdx = currentIndex, bestDist = Infinity;
+        dots.forEach((d,i) => {
+          const r = d.getBoundingClientRect();
+          const dist = Math.abs((r.left + r.width/2) - wrapCenter);
+          if(dist < bestDist){ bestDist=dist; bestIdx=i; }
+        });
+        if(bestIdx !== currentIndex) goTo(bestIdx, true, { centerDot:false });
+        else { setActiveCentury(currentIndex); setButtons(); }
+      }, 70);
+    }, { passive:true });
+
+    goTo(0, true, { centerDot:true });
+  </script>
+</body>
+</html>
