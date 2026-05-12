@@ -421,9 +421,12 @@
     <div class="timeline-shell">
       <div class="timeline">
         <div class="timeline-topbar">
-          <div class="timeline-title">Interactive Timeline + Map</div>
-          <p class="timeline-hint">Buttons · Scroll dots · Century tabs · Arrow keys · Esc</p>
-        </div>
+  <div class="timeline-title">Interactive Timeline + Map</div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div id="popoverTab" style="display:none;font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:4px 12px;cursor:pointer;background:rgba(232,197,71,0.08);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+    <p class="timeline-hint">Buttons · Scroll dots · Century tabs · Arrow keys · Esc</p>
+  </div>
+</div>
 
         <div class="controls">
           <button class="nav-btn" id="prevBtn" type="button">← Prev</button>
